@@ -485,8 +485,8 @@ Give me any task description, prompt, or application idea. I will evaluate your 
       <!-- THINKING BOX -->
       <div style="max-width: 800px; width: 100%; margin: 0 auto; display: none;" id="thinkingWrap">
         <div id="thinkingBox">
-          <span class="brain-loader">🧠</span>
-          <span class="thinking-lbl">Analyzing Intent...</span>
+          <span class="brain-loader" id="refineBrain">🧠</span>
+          <span class="thinking-lbl" id="refineLabel">Analyzing Intent...</span>
         </div>
       </div>
 
@@ -596,6 +596,36 @@ Give me any task description, prompt, or application idea. I will evaluate your 
       chatWrap.scrollTop = chatWrap.scrollHeight;
     }
 
+    let refineInterval;
+    function startRefineAnimation() {
+      const steps = [
+        { emoji: '🔍', text: 'Analyzing user query...' },
+        { emoji: '🧠', text: 'Evaluating context...' },
+        { emoji: '📝', text: 'Summarizing history...' },
+        { emoji: '🎯', text: 'Defining scope...' },
+        { emoji: '🚦', text: 'Scoring complexity...' },
+        { emoji: '📡', text: 'Selecting optimal model...' },
+        { emoji: '⚡', text: 'Routing request...' },
+        { emoji: '⏳', text: 'Awaiting model response...' }
+      ];
+      let stepIndex = 0;
+      const brainEl = document.getElementById('refineBrain');
+      const labelEl = document.getElementById('refineLabel');
+      
+      brainEl.innerText = steps[0].emoji;
+      labelEl.innerText = steps[0].text;
+      
+      refineInterval = setInterval(() => {
+        stepIndex = (stepIndex + 1) % steps.length;
+        brainEl.innerText = steps[stepIndex].emoji;
+        labelEl.innerText = steps[stepIndex].text;
+      }, 1200);
+    }
+
+    function stopRefineAnimation() {
+      clearInterval(refineInterval);
+    }
+
     async function send() {
       const text = chatInput.value.trim();
       if (!text) return;
@@ -607,6 +637,7 @@ Give me any task description, prompt, or application idea. I will evaluate your 
       // Reset & animate UI pipeline
       resetTimeline();
       thinkingWrap.style.display = 'block';
+      startRefineAnimation();
       sendBtn.disabled = true;
       chatInput.disabled = true;
 
@@ -633,6 +664,7 @@ Give me any task description, prompt, or application idea. I will evaluate your 
         const data = await res.json();
         
         thinkingWrap.style.display = 'none';
+        stopRefineAnimation();
         sendBtn.disabled = false;
         chatInput.disabled = false;
         
@@ -646,6 +678,7 @@ Give me any task description, prompt, or application idea. I will evaluate your 
       } catch (err) {
         console.error(err);
         thinkingWrap.style.display = 'none';
+        stopRefineAnimation();
         sendBtn.disabled = false;
         chatInput.disabled = false;
         resetTimeline();

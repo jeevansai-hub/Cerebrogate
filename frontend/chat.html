@@ -284,8 +284,8 @@
     </div>
     
     <div id="thinkingBox" style="display:none; align-items:center; flex-direction:column; margin-bottom:20px; animation: blurIn 0.4s ease-out both;">
-      <div class="thinking-brain">🧠</div>
-      <div style="font-size:12px; color:var(--openai-color); font-weight:600; letter-spacing:1px; text-transform:uppercase;">Thinking...</div>
+      <div class="thinking-brain" id="thinkingBrain">🧠</div>
+      <div id="thinkingLabel" style="font-size:12px; color:var(--openai-color); font-weight:600; letter-spacing:1px; text-transform:uppercase;">Thinking...</div>
     </div>
 
     <!-- INPUT -->
@@ -356,6 +356,36 @@
     chatWrap.scrollTop = chatWrap.scrollHeight;
   }
 
+  let thinkingInterval;
+  function startThinkingAnimation() {
+    const steps = [
+      { emoji: '🔍', text: 'Analyzing user query...' },
+      { emoji: '🧠', text: 'Evaluating context...' },
+      { emoji: '📝', text: 'Summarizing history...' },
+      { emoji: '🎯', text: 'Defining scope...' },
+      { emoji: '🚦', text: 'Scoring complexity...' },
+      { emoji: '📡', text: 'Selecting optimal model...' },
+      { emoji: '⚡', text: 'Routing request...' },
+      { emoji: '⏳', text: 'Awaiting model response...' }
+    ];
+    let stepIndex = 0;
+    const brainEl = document.getElementById('thinkingBrain');
+    const labelEl = document.getElementById('thinkingLabel');
+    
+    brainEl.innerText = steps[0].emoji;
+    labelEl.innerText = steps[0].text;
+    
+    thinkingInterval = setInterval(() => {
+      stepIndex = (stepIndex + 1) % steps.length;
+      brainEl.innerText = steps[stepIndex].emoji;
+      labelEl.innerText = steps[stepIndex].text;
+    }, 1200);
+  }
+
+  function stopThinkingAnimation() {
+    clearInterval(thinkingInterval);
+  }
+
   async function send() {
     const txt = chatInput.value.trim();
     if (!txt) return;
@@ -365,6 +395,7 @@
     
     // UI Loading state
     document.getElementById('thinkingBox').style.display = 'flex';
+    startThinkingAnimation();
     ['groq','openai','gemini','openrouter'].forEach(id => document.getElementById('rp-'+id).classList.add('routing-pulse'));
 
     try {
@@ -374,6 +405,7 @@
         body:JSON.stringify({ messages:history, currentCodeContext:'' })
       });
       document.getElementById('thinkingBox').style.display = 'none';
+      stopThinkingAnimation();
       ['groq','openai','gemini','openrouter'].forEach(id => document.getElementById('rp-'+id).classList.remove('routing-pulse'));
       
       if (!res.ok) {
@@ -395,6 +427,7 @@
     } catch(e) { 
       console.error(e);
       document.getElementById('thinkingBox').style.display = 'none';
+      stopThinkingAnimation();
       ['groq','openai','gemini','openrouter'].forEach(id => document.getElementById('rp-'+id).classList.remove('routing-pulse'));
       addMsg(`⚠️ Connection Error: Failed to communicate with CerebroGate server.`, 'ai');
     }
