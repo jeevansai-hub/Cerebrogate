@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CerebroGate — AI Refinement Assistant</title>
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap">
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #070612; 
+      --surface: #101010; 
+      --surface2: rgba(26,26,26,0.5);
+      --border: rgba(255,255,255,0.08); 
+      --border2: rgba(255,255,255,0.14);
+      --white: #fff; 
+      --dim: rgba(255,255,255,0.4); 
+      --text: #e4e4e7;
+      --accent: #7c3aed;
+      --accent2: #a855f7;
+      --yellow: #fbbf24;
+      --green: #4ade80;
+      --blue: #60a5fa;
+    }
+
+    body {
+      font-family: 'General Sans', sans-serif;
+      background: var(--bg); 
+      color: var(--text);
+      height: 100vh; 
+      width: 100%; 
+      display: flex; 
+      flex-direction: column; 
+      overflow: hidden; 
+      position: relative;
+    }
+
+    /* CINEMATIC BG VIDEO */
+    #bgVideoContainer {
+      position: absolute; 
+      inset: 0; 
+      z-index: 0; 
+      overflow: hidden;
+      pointer-events: none;
+    }
+    #bgVideo {
+      width: 100%; 
+      height: 100%;
+      object-fit: cover;
+      transform: scale(1.2);
+      transform-origin: left;
+      margin-left: 200px;
+      opacity: 0.5;
+    }
+    .bg-gradient-fade {
+      position: absolute; 
+      bottom: 0; 
+      left: 0; 
+      right: 0;
+      height: 160px;
+      background: linear-gradient(to bottom, transparent, var(--bg));
+      z-index: 10;
+    }
+
+    @keyframes blurIn {
+      0% { opacity: 0; filter: blur(10px); transform: translateY(20px); }
+      100% { opacity: 1; filter: blur(0); transform: translateY(0); }
+    }
+    .blur-in { animation: blurIn 0.6s ease-out forwards; }
+
+    /* LAYOUT */
+    nav {
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      right: 0;
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between;
+      padding: 0 28px; 
+      height: 52px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(7,6,18,0.8); 
+      backdrop-filter: blur(14px);
+      z-index: 200;
+    }
+    .logo { font-weight: 700; font-size: 16px; color: var(--white); text-decoration: none; }
+    .back { font-size: 13px; color: var(--dim); text-decoration: none; transition: color .2s; }
+    .back:hover { color: var(--white); }
+
+    .main-container {
+      display: flex;
+      flex: 1;
+      margin-top: 52px;
+      height: calc(100vh - 52px);
+      position: relative;
+      z-index: 20;
+      overflow: hidden;
+    }
+
+    /* LEFT SIDEBAR: Telemetry & State Panel */
+    .sidebar {
+      width: 320px;
+      border-right: 1px solid var(--border);
+      background: rgba(16, 16, 20, 0.4);
+      backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+      padding: 24px;
+      gap: 24px;
+      flex-shrink: 0;
+    }
+
+    .panel-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .panel-h {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+
+    /* STATE BADGES */
+    .state-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .state-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--white);
+    }
+    .state-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      width: fit-content;
+      transition: all 0.3s ease;
+    }
+    .state-badge.idle { background: rgba(255,255,255,0.06); color: var(--dim); border: 1px solid var(--border); }
+    .state-badge.clarify { background: rgba(251,191,36,0.15); color: var(--yellow); border: 1px solid rgba(251,191,36,0.3); animation: pulse-yellow 2s infinite; }
+    .state-badge.answer { background: rgba(74,222,128,0.15); color: var(--green); border: 1px solid rgba(74,222,128,0.3); }
+    
+    @keyframes pulse-yellow {
+      0% { box-shadow: 0 0 0 0 rgba(251,191,36,0.2); }
+      70% { box-shadow: 0 0 0 8px rgba(251,191,36,0); }
+      100% { box-shadow: 0 0 0 0 rgba(251,191,36,0); }
+    }
+
+    .state-desc {
+      font-size: 12px;
+      color: var(--dim);
+      line-height: 1.5;
+    }
+
+    /* TIMELINE STEPS */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 10px;
+      top: 8px;
+      bottom: 8px;
+      width: 1px;
+      background: var(--border);
+    }
+    .timeline-item {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      font-size: 12.5px;
+      color: var(--dim);
+      transition: all 0.3s;
+    }
+    .timeline-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      z-index: 5;
+      flex-shrink: 0;
+    }
+    .timeline-item.active { color: var(--white); }
+    .timeline-item.active .timeline-dot { border-color: var(--accent); background: rgba(124,58,237,0.2); color: #c4b5fd; animation: spin-dot 2s linear infinite; }
+    .timeline-item.done { color: rgba(255,255,255,0.35); }
+    .timeline-item.done .timeline-dot { border-color: var(--green); background: rgba(74,222,128,0.15); color: var(--green); }
+
+    @keyframes spin-dot { to { transform: rotate(360deg); } }
+
+    /* CHAT CONTAINER AREA */
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 0 40px;
+    }
+
+    .chat-wrap {
+      flex: 1;
+      overflow-y: auto;
+      padding: 40px 0 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-width: 800px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    .chat-wrap::-webkit-scrollbar { width: 4px; }
+    .chat-wrap::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+
+    .msg-row {
+      width: 100%;
+      padding: 14px 0;
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      animation: blurIn 0.5s ease-out both;
+    }
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .av-user { background: rgba(255,255,255,0.07); }
+    .av-ai { background: rgba(124,58,237,0.18); border: 1px solid rgba(124,58,237,0.3); }
+
+    .bubble {
+      flex: 1;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .bubble-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .bubble-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+    }
+    .bubble-state-indicator {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+    .bs-clarify { background: rgba(251,191,36,0.1); color: var(--yellow); border: 1px solid rgba(251,191,36,0.2); }
+    .bs-answer { background: rgba(74,222,128,0.1); color: var(--green); border: 1px solid rgba(74,222,128,0.2); }
+
+    .bubble-text {
+      font-size: 15px;
+      line-height: 1.8;
+      color: rgba(255,255,255,0.85);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .bubble-meta {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .meta-badge {
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700;
+      background: rgba(255,255,255,0.06);
+      color: var(--dim);
+      border: 1px solid var(--border);
+    }
+    .mb-provider { color: var(--blue); border-color: rgba(96,165,250,0.2); background: rgba(96,165,250,0.05); }
+
+    /* INPUT ZONE */
+    .input-zone {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px 0 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .input-row {
+      display: flex;
+      gap: 14px;
+      align-items: flex-end;
+    }
+    textarea.chat-in {
+      flex: 1;
+      background: rgba(26,26,26,0.4);
+      border: 1px solid var(--border2);
+      backdrop-filter: blur(12px);
+      border-radius: 14px;
+      padding: 14px 18px;
+      color: var(--white);
+      font-family: inherit;
+      font-size: 15px;
+      resize: none;
+      outline: none;
+      line-height: 1.6;
+      transition: all 0.2s;
+    }
+    textarea.chat-in:focus {
+      border-color: rgba(167,139,250,0.5);
+      background: rgba(26,26,26,0.6);
+    }
+    .send-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .send-btn:hover:not(:disabled) {
+      transform: scale(1.05) translateY(-2px);
+      box-shadow: 0 0 20px rgba(124,58,237,0.4);
+    }
+    .send-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .hint-bar {
+      font-size: 11px;
+      color: var(--dim);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* THINKING LOADER */
+    #thinkingBox {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 0;
+      animation: blurIn 0.3s ease;
+    }
+    .brain-loader {
+      font-size: 24px;
+      animation: pulsate 1.2s ease-in-out infinite;
+    }
+    @keyframes pulsate {
+      0%, 100% { transform: scale(1); opacity: 0.6; }
+      50% { transform: scale(1.2); opacity: 1; }
+    }
+    .thinking-lbl {
+      font-size: 12px;
+      color: var(--accent2);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* HUD */
+    #creditHUD {
+      position: fixed; 
+      bottom: 24px; 
+      right: 24px;
+      background: rgba(7,6,18,0.92); 
+      border: 1px solid var(--border2);
+      border-radius: 14px; 
+      padding: 14px 18px; 
+      z-index: 9999;
+      backdrop-filter: blur(20px); 
+      min-width: 175px;
+    }
+    .hud-lbl { color: var(--dim); }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .chat-container { padding: 0 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- CINEMATIC VIDEO BACKGROUND -->
+  <div id="bgVideoContainer">
+    <video id="bgVideo" autoplay loop muted playsinline></video>
+    <div class="bg-gradient-fade"></div>
+  </div>
+
+  <nav>
+    <a class="logo" href="index.html">⚡ CerebroGate</a>
+    <a class="back" href="index.html">← Home</a>
+  </nav>
+
+  <div class="main-container">
+    
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="panel-section">
+        <span class="panel-h">Assistant State</span>
+        <div class="state-card">
+          <div class="state-badge idle" id="stateBadge">Idle</div>
+          <span class="state-desc" id="stateDesc">Submit a prompt to start the context evaluation. The Refinement Engine will decide whether clarification is necessary.</span>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <span class="panel-h">Pipeline Progress</span>
+        <div class="timeline">
+          <div class="timeline-item" id="tlStep1">
+            <div class="timeline-dot">1</div>
+            <span>Analyzing intent & history</span>
+          </div>
+          <div class="timeline-item" id="tlStep2">
+            <div class="timeline-dot">2</div>
+            <span>Evaluating completeness</span>
+          </div>
+          <div class="timeline-item" id="tlStep3">
+            <div class="timeline-dot">3</div>
+            <span>Determining next action</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHAT INTERFACE -->
+    <div class="chat-container">
+      <div class="chat-wrap" id="chatWrap">
+        <div class="msg-row">
+          <div class="avatar av-ai">🧠</div>
+          <div class="bubble">
+            <div class="bubble-header">
+              <span class="bubble-name">Refinement Assistant</span>
+            </div>
+            <div class="bubble-text">Hello! I am your Context-Aware AI Refinement Assistant. 
+
+Give me any task description, prompt, or application idea. I will evaluate your request against our context rules to determine if further clarification is needed (STATE 1) or generate your high-accuracy answer directly (STATE 2).</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- THINKING BOX -->
+      <div style="max-width: 800px; width: 100%; margin: 0 auto; display: none;" id="thinkingWrap">
+        <div id="thinkingBox">
+          <span class="brain-loader">🧠</span>
+          <span class="thinking-lbl">Analyzing Intent...</span>
+        </div>
+      </div>
+
+      <!-- INPUT FIELD -->
+      <div class="input-zone">
+        <div class="input-row">
+          <textarea class="chat-in" id="chatInput" rows="1" placeholder="Enter your prompt or reply to clarifying questions..."></textarea>
+          <button class="send-btn" id="sendBtn">↑</button>
+        </div>
+        <div class="hint-bar">
+          <span>Tip: Try a short, ambiguous prompt to trigger STATE 1: CLARIFY</span>
+          <span>Powered by CerebroGate Route engine</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Telemetry HUD -->
+  <div id="creditHUD">
+    <div class="hud-h" style="font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--dim); margin-bottom: 10px;">Telemetry</div>
+    <div class="hud-r" style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-bottom: 6px;"><span class="hud-lbl">Used</span><span id="hudUsed" style="color:#f87171;font-weight:700">$0.000</span></div>
+    <div style="height:1px;background:rgba(255,255,255,0.08);margin:8px 0"></div>
+    <div class="hud-r" style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-bottom: 6px;"><span class="hud-lbl">Left</span><span id="hudLeft" style="color:#4ade80;font-weight:700">$15.000</span></div>
+    <div class="hud-r" style="display: flex; justify-content: space-between; align-items: center; font-size: 12px;"><span class="hud-lbl">Requests</span><span id="hudReqs" style="color:#3b82f6;font-weight:700">0</span></div>
+  </div>
+
+  <script>
+    // Initialize Video HLS background
+    const video = document.getElementById('bgVideo');
+    const videoSrc = 'https://stream.mux.com/s8pMcOvMQXc4GD6AX4e1o01xFogFxipmuKltNfSYza0200.m3u8';
+    if (Hls.isSupported()) {
+      const hls = new Hls();
+      hls.loadSource(videoSrc);
+      hls.attachMedia(video);
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = videoSrc;
+    }
+
+    const chatWrap = document.getElementById('chatWrap');
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const thinkingWrap = document.getElementById('thinkingWrap');
+    const stateBadge = document.getElementById('stateBadge');
+    const stateDesc = document.getElementById('stateDesc');
+    
+    const history = [];
+
+    function setStep(stepNum, status) {
+      const step = document.getElementById('tlStep' + stepNum);
+      if (!step) return;
+      
+      step.className = 'timeline-item ' + status;
+      const dot = step.querySelector('.timeline-dot');
+      if (status === 'active') {
+        dot.innerText = '◌';
+      } else if (status === 'done') {
+        dot.innerText = '✓';
+      } else {
+        dot.innerText = stepNum;
+      }
+    }
+
+    function resetTimeline() {
+      [1, 2, 3].forEach(i => setStep(i, ''));
+    }
+
+    function updateStateIndicator(state) {
+      stateBadge.className = 'state-badge';
+      if (state === 'CLARIFY') {
+        stateBadge.classList.add('clarify');
+        stateBadge.innerText = 'State: Clarify';
+        stateDesc.innerText = 'The Refinement Engine detected ambiguity or missing parameters. Clarification is requested to ensure accuracy.';
+      } else if (state === 'ANSWER') {
+        stateBadge.classList.add('answer');
+        stateBadge.innerText = 'State: Answer';
+        stateDesc.innerText = 'The intent context is fully satisfied! The synthesized final output has been generated.';
+      } else {
+        stateBadge.classList.add('idle');
+        stateBadge.innerText = 'Idle';
+      }
+    }
+
+    function addMessage(text, role, state, provider, model) {
+      const row = document.createElement('div');
+      row.className = 'msg-row';
+      const isUser = role === 'user';
+      
+      let stateLabel = '';
+      if (!isUser && state) {
+        stateLabel = `<span class="bubble-state-indicator ${state === 'CLARIFY' ? 'bs-clarify' : 'bs-answer'}">${state}</span>`;
+      }
+
+      row.innerHTML = `
+        <div class="avatar ${isUser ? 'av-user' : 'av-ai'}">${isUser ? '👤' : '🧠'}</div>
+        <div class="bubble">
+          <div class="bubble-header">
+            <span class="bubble-name">${isUser ? 'You' : 'Refinement Assistant'}</span>
+            ${stateLabel}
+          </div>
+          <div class="bubble-text">${text}</div>
+          ${!isUser && provider ? `<div class="bubble-meta">
+              <span class="meta-badge mb-provider">Model: ${provider} (${model || ''})</span>
+            </div>` : ''}
+        </div>`;
+      chatWrap.appendChild(row);
+      chatWrap.scrollTop = chatWrap.scrollHeight;
+    }
+
+    async function send() {
+      const text = chatInput.value.trim();
+      if (!text) return;
+
+      chatInput.value = '';
+      addMessage(text, 'user');
+      history.push({ role: 'user', content: text });
+
+      // Reset & animate UI pipeline
+      resetTimeline();
+      thinkingWrap.style.display = 'block';
+      sendBtn.disabled = true;
+      chatInput.disabled = true;
+
+      setStep(1, 'active');
+
+      try {
+        // Step 2 transition
+        setTimeout(() => {
+          setStep(1, 'done');
+          setStep(2, 'active');
+        }, 1200);
+
+        setTimeout(() => {
+          setStep(2, 'done');
+          setStep(3, 'active');
+        }, 2400);
+
+        const res = await fetch('/api/refine', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: history })
+        });
+
+        const data = await res.json();
+        
+        thinkingWrap.style.display = 'none';
+        sendBtn.disabled = false;
+        chatInput.disabled = false;
+        
+        setStep(3, 'done');
+        updateStateIndicator(data.state);
+
+        const responseText = data.state === 'CLARIFY' ? data.question : data.response;
+        addMessage(responseText, 'assistant', data.state, data.provider, data.model);
+        history.push({ role: 'assistant', content: responseText });
+
+      } catch (err) {
+        console.error(err);
+        thinkingWrap.style.display = 'none';
+        sendBtn.disabled = false;
+        chatInput.disabled = false;
+        resetTimeline();
+        addMessage('An error occurred during prompt evaluation. Please check your server logs.', 'assistant');
+      }
+      pollCredits();
+    }
+
+    sendBtn.onclick = send;
+    chatInput.onkeydown = e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        send();
+      }
+    };
+
+    async function pollCredits() {
+      try {
+        const r = await fetch('/api/stats');
+        const d = await r.json();
+        document.getElementById('hudUsed').innerText = '$' + d.credits_used.toFixed(3);
+        document.getElementById('hudLeft').innerText = '$' + d.credits_left.toFixed(3);
+        document.getElementById('hudReqs').innerText = d.total_requests || 0;
+      } catch(e) {}
+    }
+    pollCredits();
+    setInterval(pollCredits, 5000);
+  </script>
+</body>
+</html>

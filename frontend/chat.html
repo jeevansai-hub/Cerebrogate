@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CerebroGate — Chat</title>
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap">
+  <!-- HLS.js for .m3u8 support in all browsers -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #070612; --surface: #101010; --surface2: rgba(26,26,26,0.5);
+      --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.14);
+      --white: #fff; --dim: rgba(255,255,255,0.4); --text: #e4e4e7;
+      --groq-color: #22c55e;
+      --openai-color: #a78bfa;
+      --gemini-color: #3b82f6;
+      --or-color: #f59e0b;
+    }
+    body {
+      font-family: 'General Sans', sans-serif;
+      background: var(--bg); color: var(--text);
+      height: 100vh; width: 100%; display: flex; flex-direction: column; 
+      overflow: hidden; position: relative;
+    }
+
+    /* ── CINEMATIC BG VIDEO ── */
+    #bgVideoContainer {
+      position: absolute; inset: 0; 
+      z-index: 0; overflow: hidden;
+      pointer-events: none;
+    }
+    #bgVideo {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transform: scale(1.2);
+      transform-origin: left;
+      margin-left: 200px;
+      opacity: 0.6;
+    }
+    .bg-gradient-fade {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      height: 160px; /* h-40 */
+      background: linear-gradient(to bottom, transparent, var(--bg));
+      z-index: 10;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes blurIn {
+      0% { opacity: 0; filter: blur(10px); transform: translateY(20px); }
+      100% { opacity: 1; filter: blur(0); transform: translateY(0); }
+    }
+    .blur-in { animation: blurIn 0.6s ease-out forwards; }
+
+    /* ── LAYOUT ── */
+    .content-layer {
+      position: relative; z-index: 20;
+      width: 100%; height: 100%;
+      max-width: 1280px; /* max-w-7xl */
+      margin: 0 auto;
+      padding: 0 24px; /* px-6 */
+      display: flex; flex-direction: column;
+      justify-content: center; /* Vertically centered */
+      align-items: flex-start; /* Content aligned to left */
+    }
+    @media (min-width: 1024px) { .content-layer { padding: 0 48px; } }
+
+    /* ── BADGE ── */
+    .ally-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 16px; border-radius: 9999px;
+      border: 1px solid rgba(255,255,255,0.2);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      background: rgba(255,255,255,0.05);
+      margin-bottom: 24px;
+      animation: blurIn 0.6s ease-out both;
+    }
+    .ally-badge span { font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.8); }
+
+    /* ── CHAT INTERFACE ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 28px; height: 52px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(7,6,18,0.8); backdrop-filter: blur(14px);
+      z-index: 200;
+    }
+    .logo { font-weight: 700; font-size: 16px; color: var(--white); text-decoration: none; }
+    .back { font-size: 13px; color: var(--dim); text-decoration: none; transition: color .2s; }
+    .back:hover { color: var(--white); }
+
+    .route-bar {
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      padding: 10px 24px; border-bottom: 1px solid var(--border);
+      background: rgba(7,6,18,0.6); backdrop-filter: blur(10px); flex-shrink: 0;
+      z-index: 100; position: fixed; top: 52px; left: 0; right: 0;
+    }
+    .route-label { font-size: 11px; color: var(--dim); font-weight: 600; letter-spacing: .5px; text-transform: uppercase; }
+
+    .route-providers { display: flex; gap: 8px; align-items: center; }
+    .rp {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 12px; border-radius: 20px;
+      border: 1px solid var(--border2); font-size: 12px; font-weight: 600;
+      color: var(--dim); background: var(--surface2);
+      transition: all 0.35s ease; position: relative; cursor: default;
+    }
+    .rp-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: .4; transition: opacity .35s; }
+
+    .rp.active-groq    { color: var(--groq-color); border-color: var(--groq-color); background: rgba(34,197,94,0.15); box-shadow: 0 0 25px rgba(34,197,94,0.6), 0 0 8px rgba(34,197,94,0.3) inset; transform: scale(1.05); }
+    .rp.active-openai  { color: var(--openai-color); border-color: var(--openai-color); background: rgba(167,139,250,0.15); box-shadow: 0 0 25px rgba(167,139,250,0.6), 0 0 8px rgba(167,139,250,0.3) inset; transform: scale(1.05); }
+    .rp.active-gemini  { color: var(--gemini-color); border-color: var(--gemini-color); background: rgba(59,130,246,0.15); box-shadow: 0 0 25px rgba(59,130,246,0.6), 0 0 8px rgba(59,130,246,0.3) inset; transform: scale(1.05); }
+    .rp.active-openrouter { color: var(--or-color); border-color: var(--or-color); background: rgba(245,158,11,0.15); box-shadow: 0 0 25px rgba(245,158,11,0.6), 0 0 8px rgba(245,158,11,0.3) inset; transform: scale(1.05); }
+    
+    #routingStatus {
+      font-size: 11px; font-weight: 600; color: var(--dim);
+      margin-left: 20px; transition: all 0.3s;
+    }
+    .status-highlight { color: var(--white); text-shadow: 0 0 8px rgba(255,255,255,0.4); }
+    
+    .rp.routing-pulse { animation: routing-glow 1.5s ease-in-out infinite; }
+    #rp-groq.routing-pulse { animation-delay: 0s; }
+    #rp-openai.routing-pulse { animation-delay: 0.3s; }
+    #rp-gemini.routing-pulse { animation-delay: 0.6s; }
+    #rp-openrouter.routing-pulse { animation-delay: 0.9s; }
+
+    @keyframes routing-glow {
+      0%,100% { background: var(--surface2); border-color: var(--border2); opacity: 0.6; }
+      50% { background: rgba(124,58,237,0.15); border-color: rgba(124,58,237,0.5); opacity: 1; }
+    }
+
+    .rp.active-groq .rp-dot, .rp.active-openai .rp-dot,
+    .rp.active-gemini .rp-dot, .rp.active-openrouter .rp-dot { opacity: 1; animation: blink-dot 1.2s infinite; }
+    @keyframes blink-dot { 0%,100% { transform: scale(1); } 50% { transform: scale(1.4); } }
+
+    .complexity-badge {
+      padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700;
+      letter-spacing: .5px; text-transform: uppercase;
+      background: var(--surface2); color: var(--dim); border: 1px solid var(--border);
+      transition: all 0.3s;
+    }
+    .complexity-badge.easy   { background: rgba(34,197,94,0.15); color: var(--groq-color); border-color: rgba(34,197,94,0.4); box-shadow: 0 0 10px rgba(34,197,94,0.1); }
+    .complexity-badge.medium { background: rgba(167,139,250,0.15); color: var(--openai-color); border-color: rgba(167,139,250,0.4); box-shadow: 0 0 10px rgba(167,139,250,0.1); }
+    .complexity-badge.heavy  { background: rgba(59,130,246,0.15); color: var(--gemini-color); border-color: rgba(59,130,246,0.4); box-shadow: 0 0 10px rgba(59,130,246,0.1); }
+
+    .chat-wrap {
+      width: 100%; max-width: 700px;
+      height: 60vh;
+      overflow-y: auto; padding: 20px 0;
+      display: flex; flex-direction: column; align-items: flex-start; gap: 0;
+    }
+    .chat-wrap::-webkit-scrollbar { width: 4px; }
+    .chat-wrap::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+
+    .msg-row {
+      width: 100%; padding: 12px 0;
+      display: flex; gap: 16px; align-items: flex-start;
+      animation: blurIn 0.5s ease-out both;
+    }
+
+    .avatar {
+      width: 32px; height: 32px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 14px;
+      flex-shrink: 0; margin-top: 3px;
+    }
+    .av-user { background: rgba(255,255,255,0.07); }
+    .av-ai { background: rgba(124,58,237,0.18); border: 1px solid rgba(124,58,237,0.3); }
+
+    .bubble {
+      flex: 1; padding: 4px 0 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .bubble-name { font-size: 11px; font-weight: 700; color: var(--dim); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 8px; }
+    .bubble-text { font-size: 15px; line-height: 1.8; color: rgba(255,255,255,0.85); white-space: pre-wrap; word-break: break-word; }
+
+    .bubble-meta { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .meta-badge { padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+    .mb-groq { background: rgba(34,197,94,0.12); color: var(--groq-color); border: 1px solid rgba(34,197,94,0.2); }
+    .mb-openai { background: rgba(167,139,250,0.12); color: var(--openai-color); border: 1px solid rgba(167,139,250,0.2); }
+    .mb-gemini { background: rgba(59,130,246,0.12); color: var(--gemini-color); border: 1px solid rgba(59,130,246,0.2); }
+    .mb-openrouter { background: rgba(245,158,11,0.12); color: var(--or-color); border: 1px solid rgba(245,158,11,0.2); }
+    
+    .meta-badge-complexity { padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; background: rgba(255,255,255,0.06); color: var(--dim); }
+    .meta-badge-complexity.easy { color: var(--groq-color); }
+    .meta-badge-complexity.medium { color: var(--openai-color); }
+    .meta-badge-complexity.heavy { color: var(--gemini-color); }
+
+    .typing { display: flex; gap: 4px; align-items: center; padding-top: 4px; }
+    .typing span { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.25); animation: tdot 1.2s ease infinite; }
+    @keyframes tdot { 0%,80%,100% { opacity:.25; transform:scale(.8); } 40% { opacity:1; transform:scale(1); } }
+
+    .input-bar {
+      width: 100%; max-width: 700px;
+      padding: 24px 0 32px;
+      display: flex; flex-direction: column; gap: 24px;
+    }
+    .input-row { display: flex; gap: 12px; align-items: flex-end; }
+
+    textarea.chat-in {
+      flex: 1; background: rgba(26,26,26,0.4); border: 1px solid var(--border2);
+      backdrop-filter: blur(12px); border-radius: 14px; padding: 14px 18px; color: var(--white);
+      font-family: inherit; font-size: 15px; resize: none; outline: none; line-height: 1.6;
+    }
+    textarea.chat-in:focus { border-color: rgba(167,139,250,0.5); background: rgba(26,26,26,0.6); }
+
+    .send-btn {
+      width: 48px; height: 48px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--openai-color), #7c3aed); color: #fff; border: none;
+      font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .send-btn:hover:not(:disabled) { transform: scale(1.05) translateY(-2px); }
+
+    #creditHUD {
+      position: fixed; bottom: 32px; right: 32px;
+      background: rgba(7,6,18,0.92); border: 1px solid var(--border2);
+      border-radius: 14px; padding: 14px 18px; z-index: 9999;
+      backdrop-filter: blur(20px); min-width: 175px;
+    }
+    .hud-h { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--dim); margin-bottom: 10px; }
+    .hud-r { display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-bottom: 6px; }
+    .hud-lbl { color: var(--dim); }
+
+    /* THINKING BRAIN */
+    .thinking-brain {
+      width: 60px; height: 60px;
+      background: rgba(124,58,237,0.1);
+      border: 1px solid rgba(124,58,237,0.4);
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; margin-bottom: 15px;
+      animation: brain-pulse 1.5s ease-in-out infinite;
+      box-shadow: 0 0 20px rgba(124,58,237,0.2);
+    }
+    @keyframes brain-pulse {
+      0%, 100% { transform: scale(1); opacity: 0.8; box-shadow: 0 0 20px rgba(124,58,237,0.2); }
+      50% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 40px rgba(124,58,237,0.4); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- BG VIDEO -->
+  <div id="bgVideoContainer">
+    <video id="bgVideo" autoplay loop muted playsinline></video>
+    <div class="bg-gradient-fade"></div>
+  </div>
+
+  <nav>
+    <a class="logo" href="index.html">⚡ CerebroGate</a>
+    <a class="back" href="index.html">← Home</a>
+  </nav>
+
+  <div class="route-bar">
+    <span class="route-label">Model Router</span>
+    <div class="route-providers">
+      <div class="rp" id="rp-groq"><div class="rp-dot"></div>🟢 Groq</div>
+      <div class="rp" id="rp-openai"><div class="rp-dot"></div>🟣 OpenAI</div>
+      <div class="rp" id="rp-gemini"><div class="rp-dot"></div>🔵 Gemini</div>
+      <div class="rp" id="rp-openrouter"><div class="rp-dot"></div>🟡 OpenRouter</div>
+    </div>
+    <div class="complexity-badge" id="complexityBadge">Waiting...</div>
+    <div id="routingStatus"></div>
+  </div>
+
+  <div class="content-layer">
+    <!-- ALLY BADGE -->
+    <div class="ally-badge">
+      <svg class="sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.45 4.5h4.55l-3.7 2.7 1.45 4.5-3.75-2.8-3.75 2.8 1.45-4.5-3.7-2.7h4.55z"/></svg>
+      <span>New AI Automation Ally</span>
+    </div>
+
+    <!-- CHAT WRAP -->
+    <div class="chat-wrap" id="chatWrap">
+      <div class="msg-row">
+        <div class="avatar av-ai">🧠</div>
+        <div class="bubble">
+          <div class="bubble-name">CerebroGate</div>
+          <div class="bubble-text">Hi! I'm CerebroGate — an AI assistant that automatically routes your questions to the most cost-efficient model.</div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="thinkingBox" style="display:none; align-items:center; flex-direction:column; margin-bottom:20px; animation: blurIn 0.4s ease-out both;">
+      <div class="thinking-brain">🧠</div>
+      <div style="font-size:12px; color:var(--openai-color); font-weight:600; letter-spacing:1px; text-transform:uppercase;">Thinking...</div>
+    </div>
+
+    <!-- INPUT -->
+    <div class="input-bar">
+      <div class="input-row">
+        <textarea class="chat-in" id="chatInput" rows="1" placeholder="Ask anything..."></textarea>
+        <button class="send-btn" id="sendBtn">↑</button>
+      </div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.2)">Easy → Groq · Medium → OpenAI · Heavy → Gemini</div>
+    </div>
+  </div>
+
+  <div id="creditHUD">
+    <div class="hud-h">Credits</div>
+    <div class="hud-r"><span class="hud-lbl">Used</span><span id="hudUsed" style="color:#f87171;font-weight:700">$0.000</span></div>
+    <div style="height:1px;background:rgba(255,255,255,0.08);margin:8px 0"></div>
+    <div class="hud-r"><span class="hud-lbl">Left</span><span id="hudLeft" style="color:#4ade80;font-weight:700">$15.000</span></div>
+    <div class="hud-r"><span class="hud-lbl">Requests</span><span id="hudReqs" style="color:#3b82f6;font-weight:700">0</span></div>
+  </div>
+
+<script>
+  // HLS Video Initialization
+  const video = document.getElementById('bgVideo');
+  const videoSrc = 'https://stream.mux.com/s8pMcOvMQXc4GD6AX4e1o01xFogFxipmuKltNfSYza0200.m3u8';
+  if (Hls.isSupported()) {
+    const hls = new Hls();
+    hls.loadSource(videoSrc);
+    hls.attachMedia(video);
+  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    video.src = videoSrc;
+  }
+
+  const chatWrap = document.getElementById('chatWrap');
+  const chatInput = document.getElementById('chatInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const history = [];
+
+  function activateProvider(p, c, m) {
+    ['groq','openai','gemini','openrouter'].forEach(id => document.getElementById('rp-'+id).className = 'rp');
+    const map = { Groq:'groq', OpenAI:'openai', Gemini:'gemini', OpenRouter:'openrouter' };
+    const key = map[p] || 'groq';
+    document.getElementById('rp-'+key).classList.add('active-'+key);
+    
+    const badge = document.getElementById('complexityBadge');
+    badge.className = 'complexity-badge ' + (c || '');
+    badge.innerText = (c === 'easy' ? '🟢 Easy' : c === 'medium' ? '🟣 Medium' : '🔵 Heavy');
+
+    const status = document.getElementById('routingStatus');
+    status.innerHTML = `Routed to <span class="status-highlight">${p} (${m || ''})</span> based on <span class="status-highlight">${c}</span> complexity.`;
+    status.style.opacity = '1';
+  }
+
+  function addMsg(text, role, p, m, c) {
+    const row = document.createElement('div');
+    row.className = 'msg-row';
+    const isUser = role === 'user';
+    row.innerHTML = `
+      <div class="avatar ${isUser ? 'av-user' : 'av-ai'}">${isUser ? '👤' : '🧠'}</div>
+      <div class="bubble">
+        <div class="bubble-name">${isUser ? 'You' : 'CerebroGate'}</div>
+        <div class="bubble-text">${text}</div>
+        ${!isUser && p ? `<div class="bubble-meta">
+            <span class="meta-badge mb-${p.toLowerCase()}">Model: ${p}</span>
+            <span class="meta-badge-complexity ${c || ''}">Task: ${c ? c.toUpperCase() : 'AUTO'}</span>
+          </div>` : ''}
+      </div>`;
+    chatWrap.appendChild(row);
+    chatWrap.scrollTop = chatWrap.scrollHeight;
+  }
+
+  async function send() {
+    const txt = chatInput.value.trim();
+    if (!txt) return;
+    chatInput.value = '';
+    addMsg(txt, 'user');
+    history.push({ role:'user', content:txt });
+    
+    // UI Loading state
+    document.getElementById('thinkingBox').style.display = 'flex';
+    ['groq','openai','gemini','openrouter'].forEach(id => document.getElementById('rp-'+id).classList.add('routing-pulse'));
+
+    try {
+      const res = await fetch('/api/workspace_chat', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ messages:history, currentCodeContext:'' })
+      });
+      document.getElementById('thinkingBox').style.display = 'none';
+      const data = await res.json();
+      activateProvider(data.provider, data.complexity, data.model);
+      addMsg(data.message, 'ai', data.provider, data.model, data.complexity);
+      history.push({ role:'assistant', content:data.message });
+    } catch(e) { console.error(e); }
+    pollCredits();
+  }
+
+  sendBtn.onclick = send;
+  chatInput.onkeydown = e => { if(e.key === 'Enter') send(); };
+
+  async function pollCredits() {
+    try {
+      const r = await fetch('/api/stats');
+      const d = await r.json();
+      document.getElementById('hudUsed').innerText = '$' + d.credits_used.toFixed(3);
+      document.getElementById('hudLeft').innerText = '$' + d.credits_left.toFixed(3);
+      document.getElementById('hudReqs').innerText = d.total_requests || 0;
+    } catch(e) {}
+  }
+  pollCredits();
+  setInterval(pollCredits, 5000);
+</script>
+</body>
+</html>

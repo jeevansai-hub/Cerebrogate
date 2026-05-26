@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CerebroGate — The Brain Behind Smart AI Spending</title>
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black: #000000;
+      --white: #ffffff;
+      --glass: rgba(255,255,255,0.08);
+      --glass-border: rgba(255,255,255,0.15);
+      --text-dim: rgba(255,255,255,0.65);
+    }
+
+    body {
+      font-family: 'General Sans', sans-serif;
+      background: var(--black);
+      color: var(--white);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* VIDEO HERO */
+    .hero-wrap {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .video-bg {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      z-index: 0;
+    }
+
+    .video-overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 1;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* NAVBAR */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 120px;
+    }
+
+    .logo {
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: -0.3px;
+      color: var(--white);
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-dim);
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--white); }
+
+    .nav-right a {
+      display: inline-block;
+      padding: 9px 20px;
+      border-radius: 20px;
+      border: 1px solid var(--glass-border);
+      color: var(--white);
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .nav-right a:hover { background: var(--glass); }
+
+    /* HERO MAIN */
+    .hero-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 24px 100px;
+      gap: 0;
+    }
+
+    /* BADGE */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 16px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      font-size: 12.5px;
+      font-weight: 500;
+      margin-bottom: 40px;
+    }
+    .badge-dot { width: 5px; height: 5px; background: var(--white); border-radius: 50%; }
+    .badge-dim { color: rgba(255,255,255,0.6); }
+
+    /* HEADING */
+    h1 {
+      font-size: clamp(36px, 6vw, 60px);
+      font-weight: 500;
+      line-height: 1.2;
+      letter-spacing: -1.5px;
+      max-width: 620px;
+      background: linear-gradient(144.5deg, #ffffff 28%, rgba(255,255,255,0.15) 115%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 24px;
+    }
+
+    .subheading {
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--text-dim);
+      max-width: 500px;
+      line-height: 1.6;
+      margin-bottom: 48px;
+    }
+
+    /* CTA BUTTONS — TWO OPTIONS */
+    .cta-row {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-build {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      border-radius: 50px;
+      background: var(--white);
+      color: var(--black);
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'General Sans', sans-serif;
+      text-decoration: none;
+      transition: opacity 0.2s, transform 0.2s;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-build:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    .btn-chat {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      border-radius: 50px;
+      background: transparent;
+      color: var(--white);
+      font-size: 14px;
+      font-weight: 500;
+      font-family: 'General Sans', sans-serif;
+      text-decoration: none;
+      border: 1px solid var(--glass-border);
+      transition: background 0.2s, transform 0.2s;
+      cursor: pointer;
+    }
+    .btn-chat:hover { background: rgba(255,255,255,0.08); transform: translateY(-1px); }
+
+    .btn-icon { font-size: 16px; }
+
+    /* FEATURE PILLS BELOW CTA */
+    .feature-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 48px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .feature-pill {
+      padding: 6px 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    /* FLOATING CREDITS BOX */
+    #creditHUD {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(10,10,10,0.85);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 14px;
+      padding: 14px 18px;
+      z-index: 9999;
+      backdrop-filter: blur(12px);
+      min-width: 180px;
+      font-size: 12px;
+    }
+
+    .hud-title {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 10px;
+    }
+
+    .hud-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .hud-label { color: rgba(255,255,255,0.55); }
+    .hud-val-red { color: #f87171; font-weight: 600; }
+    .hud-val-green { color: #4ade80; font-weight: 600; }
+    .hud-divider { height: 1px; background: rgba(255,255,255,0.08); margin: 8px 0; }
+
+    @media (max-width: 768px) {
+      nav { padding: 20px 24px; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="hero-wrap">
+    <video class="video-bg" autoplay muted loop playsinline>
+      <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260217_030345_246c0224-10a4-422c-b324-070b7c0eceda.mp4" type="video/mp4">
+    </video>
+    <div class="video-overlay"></div>
+
+    <div class="hero-content">
+      <nav>
+        <a class="logo" href="#">CerebroGate</a>
+        <ul class="nav-links">
+          <li><a href="#">Home</a></li>
+          <li><a href="#">How It Works</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="#">Docs</a></li>
+        </ul>
+        <div class="nav-right">
+          <a href="dashboard.html">Dashboard →</a>
+        </div>
+      </nav>
+
+      <div class="hero-main">
+        <div class="badge">
+          <span class="badge-dot"></span>
+          <span class="badge-dim">Early access available from</span>
+          <span>May 1, 2026</span>
+        </div>
+
+        <h1>CEREBROGATE</h1>
+        <p class="subheading">The Brain Behind Smart AI Spending. Route prompts intelligently across Groq, OpenRouter & Gemini — pay only for what you need.</p>
+
+        <div class="cta-row">
+          <a href="builder.html" class="btn-build">
+            <span class="btn-icon">⚡</span>
+            Build an App
+          </a>
+          <a href="chat.html" class="btn-chat">
+            <span class="btn-icon">💬</span>
+            Start Conversation
+          </a>
+        </div>
+
+        <div class="feature-row">
+          <span class="feature-pill">🟢 Easy → Groq</span>
+          <span class="feature-pill">🟣 Medium → OpenAI</span>
+          <span class="feature-pill">🔵 Heavy → Gemini</span>
+          <span class="feature-pill">🟡 Fallback → OpenRouter</span>
+          <span class="feature-pill">⚡ Semantic Routing & Cache</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GLOBAL FLOATING CREDITS HUD -->
+  <div id="creditHUD">
+    <div class="hud-title">Credits</div>
+    <div class="hud-row">
+      <span class="hud-label">Used</span>
+      <span class="hud-val-red" id="hudUsed">$0.000</span>
+    </div>
+    <div class="hud-divider"></div>
+    <div class="hud-row">
+      <span class="hud-label">Left</span>
+      <span class="hud-val-green" id="hudLeft">$15.00</span>
+    </div>
+    <div class="hud-row">
+      <span class="hud-label">Requests</span>
+      <span class="hud-val-green" id="hudReqs">0</span>
+    </div>
+    <div class="hud-row">
+      <span class="hud-label">Hit Ratio</span>
+      <span class="hud-val-green" id="hudHitRatio">0%</span>
+    </div>
+  </div>
+
+  <script>
+    async function pollCredits() {
+      try {
+        const res = await fetch('/api/stats');
+        if (!res.ok) return;
+        const d = await res.json();
+        document.getElementById('hudUsed').innerText = '$' + (d.credits_used || 0).toFixed(3);
+        document.getElementById('hudLeft').innerText = '$' + (d.credits_left || 15).toFixed(3);
+        document.getElementById('hudReqs').innerText = d.total_requests || 0;
+        const rate = d.total_requests > 0 ? ((d.cache_hits / d.total_requests) * 100).toFixed(0) : 0;
+        document.getElementById('hudHitRatio').innerText = rate + '%';
+      } catch(e) {}
+    }
+    pollCredits();
+    setInterval(pollCredits, 5000);
+  </script>
+</body>
+</html>

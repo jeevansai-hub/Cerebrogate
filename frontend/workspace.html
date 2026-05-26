@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CerebroGate - Workspace</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="css/workspace.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar" style="padding: 12px 24px;">
+    <a href="index.html" class="logo">CerebroGate</a>
+    <ul class="nav-links">
+      <li><a href="dashboard.html">Dashboard</a></li>
+    </ul>
+  </nav>
+
+  <!-- Split Screen Workspace -->
+  <div class="workspace-container">
+    
+    <!-- Left: Chat Panel -->
+    <div class="chat-panel">
+      <div class="chat-history" id="chatHistory">
+        <div class="chat-bubble chat-ai">
+          Hello! I'm CerebroGate. You can chat with me directly (routed via Groq to save cost), or ask me to "build a website/app" and I will design architecture, write code, and render a live preview!
+        </div>
+      </div>
+      
+      <div class="chat-input-area">
+        <textarea id="chatInput" rows="3" placeholder="Message or ask to build a website..."></textarea>
+        <div class="chat-controls">
+          <button id="sendBtn" class="btn btn-solid" style="padding: 8px 16px;">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Viewer Panel -->
+    <div class="main-panel">
+      <div class="tabs-header">
+        <button class="tab-btn active" onclick="switchTab('previewTab')">Preview</button>
+        <button class="tab-btn" onclick="switchTab('codeTab')">Frontend Code</button>
+        <button class="tab-btn" onclick="switchTab('archTab')">Architecture</button>
+      </div>
+
+      <div id="previewTab" class="tab-content active">
+        <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin"></iframe>
+        <div id="previewEmpty" style="display:flex; height:100%; align-items:center; justify-content:center; color:var(--text-secondary);">
+          Generate an app to see the preview.
+        </div>
+      </div>
+
+      <div id="codeTab" class="tab-content">
+        <div style="background:#111; height:100%; overflow:auto;">
+          <pre class="code-view" id="codeViewer">// No code generated yet.</pre>
+        </div>
+      </div>
+
+      <div id="archTab" class="tab-content">
+         <div style="padding: 24px; color: var(--text-secondary); line-height: 1.6;" id="archViewer">
+           No architecture logic generated.
+         </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="js/workspace.js"></script>
+</body>
+</html>

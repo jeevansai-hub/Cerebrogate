@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CerebroGate — App Builder</title>
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --surface2: #1a1a1a;
+      --border: rgba(255,255,255,0.08);
+      --border2: rgba(255,255,255,0.14);
+      --white: #ffffff;
+      --text: #e4e4e7;
+      --dim: rgba(255,255,255,0.4);
+      --accent: #7c3aed;
+      --accent2: #a855f7;
+      --green: #22c55e;
+      --yellow: #f59e0b;
+      --red: #ef4444;
+      --blue: #3b82f6;
+    }
+
+    body {
+      font-family: 'General Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* PAGE 3D ENTRY */
+    @keyframes entry {
+      0%   { opacity: 0; transform: perspective(1000px) rotateX(8deg) scale(0.97) translateY(20px); }
+      100% { opacity: 1; transform: perspective(1000px) rotateX(0deg) scale(1) translateY(0); }
+    }
+    .page { animation: entry 0.55s cubic-bezier(0.22,1,0.36,1) both; display: flex; flex-direction: column; height:100vh; }
+
+    /* TOP NAV */
+    .top-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 52px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,10,10,0.95);
+      backdrop-filter: blur(12px);
+      flex-shrink: 0;
+      z-index: 100;
+    }
+    .nav-logo { font-weight: 700; font-size: 16px; color: var(--white); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+    .nav-logo span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .nav-right { display: flex; align-items: center; gap: 10px; }
+    .nav-btn { padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer; border: 1px solid var(--border2); background: transparent; color: var(--dim); transition: all 0.15s; }
+    .nav-btn:hover { color: var(--white); border-color: rgba(255,255,255,0.3); }
+    .nav-btn-home { color: var(--text); }
+
+    /* MAIN SPLIT */
+    .main { display: flex; flex: 1; overflow: hidden; }
+
+    /* LEFT PANEL */
+    .left {
+      width: 360px; flex-shrink: 0;
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      background: var(--surface);
+    }
+
+    .left-header {
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .left-header h2 { font-size: 14px; font-weight: 600; color: var(--white); margin-bottom: 3px; }
+    .left-header p { font-size: 12px; color: var(--dim); }
+
+    /* HISTORY */
+    .history { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .history::-webkit-scrollbar { width: 4px; }
+    .history::-webkit-scrollbar-track { background: transparent; }
+    .history::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+    .hist-item {
+      padding: 10px 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--text);
+      cursor: pointer;
+      transition: border-color 0.15s;
+      display: flex; gap: 8px; align-items: flex-start;
+    }
+    .hist-item:hover { border-color: var(--border2); }
+    .hist-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+    .hist-text { flex: 1; line-height: 1.4; }
+
+    /* INPUT AREA */
+    .input-area { padding: 12px; border-top: 1px solid var(--border); }
+
+    .prompt-box {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .prompt-box:focus-within { border-color: rgba(124,58,237,0.5); box-shadow: 0 0 0 3px rgba(124,58,237,0.1); }
+
+    .prompt-box textarea {
+      width: 100%; padding: 14px 16px 8px;
+      background: transparent; border: none; outline: none;
+      color: var(--white); font-family: inherit; font-size: 14px;
+      resize: none; min-height: 90px; max-height: 180px;
+      line-height: 1.5;
+    }
+    .prompt-box textarea::placeholder { color: var(--dim); }
+
+    .prompt-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px 10px;
+    }
+
+    .routing-tags { display: flex; gap: 6px; }
+    .rtag { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--dim); }
+    .rdot { width: 6px; height: 6px; border-radius: 50%; }
+    .rdot-g { background: var(--blue); }
+    .rdot-o { background: var(--yellow); }
+    .rdot-q { background: var(--green); }
+
+    .gen-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 8px;
+      background: var(--accent); color: #fff;
+      border: none; font-family: inherit; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    }
+    .gen-btn:hover:not(:disabled) { background: var(--accent2); transform: translateY(-1px); }
+    .gen-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+    /* PROGRESS */
+    .progress-wrap { padding: 0 12px 10px; }
+    .progress-steps { display: flex; flex-direction: column; gap: 4px; }
+    .pstep { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--dim); padding: 2px 0; }
+    .pstep-icon { width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; flex-shrink: 0; background: rgba(255,255,255,0.06); border: 1px solid var(--border); }
+    .pstep.active .pstep-icon { background: rgba(245,158,11,0.2); border-color: var(--yellow); animation: spin 1s linear infinite; }
+    .pstep.done .pstep-icon { background: rgba(34,197,94,0.15); border-color: var(--green); color: var(--green); }
+    .pstep.done { color: rgba(255,255,255,0.25); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* RIGHT PANEL */
+    .right { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--bg); }
+
+    /* TABS */
+    .tabs { display: flex; align-items: center; border-bottom: 1px solid var(--border); padding: 0 16px; height: 44px; gap: 2px; flex-shrink: 0; }
+    .tab { padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; color: var(--dim); cursor: pointer; border: none; background: none; font-family: inherit; transition: all 0.15s; position: relative; }
+    .tab.active { color: var(--white); background: rgba(255,255,255,0.06); }
+    .tabs-right { margin-left: auto; display: flex; gap: 8px; }
+
+    .copy-btn-sm {
+      padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 500;
+      background: rgba(255,255,255,0.06); border: 1px solid var(--border2); color: var(--text);
+      cursor: pointer; font-family: inherit; transition: all 0.15s;
+    }
+    .copy-btn-sm:hover { background: rgba(255,255,255,0.12); }
+
+    .provider-badge {
+      padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 600;
+      background: rgba(124,58,237,0.15); color: #a78bfa;
+    }
+    .pb-groq { background: rgba(34,197,94,0.12); color: #4ade80; }
+    .pb-gemini { background: rgba(59,130,246,0.12); color: #60a5fa; }
+    .pb-openrouter { background: rgba(245,158,11,0.12); color: #fbbf24; }
+
+    /* TAB CONTENT */
+    .tab-content { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+    .tab-content.active { display: flex; }
+
+    /* PREVIEW */
+    #previewPanel { position: relative; }
+    .preview-empty {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 14px; color: var(--dim);
+    }
+    .preview-graphic {
+      width: 80px; height: 80px;
+      background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(168,85,247,0.1));
+      border: 1px solid rgba(124,58,237,0.3);
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center; font-size: 32px;
+    }
+    .preview-title { font-size: 16px; font-weight: 600; color: rgba(255,255,255,0.5); }
+    .preview-sub { font-size: 13px; text-align: center; max-width: 260px; line-height: 1.5; }
+
+    #previewFrame { width: 100%; height: 100%; border: none; display: none; }
+
+    /* CODE VIEW */
+    #codePanel { flex: 1; overflow-y: auto; }
+    #codePanel::-webkit-scrollbar { width: 5px; }
+    #codePanel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
+    .code-inner { padding: 20px 24px; }
+    pre { font-family: 'Fira Code', monospace; font-size: 12.5px; line-height: 1.65; color: #c4b5fd; white-space: pre-wrap; word-break: break-word; }
+
+    /* PROSE */
+    .prose-panel { padding: 28px 32px; overflow-y: auto; line-height: 1.75; font-size: 14px; color: rgba(255,255,255,0.7); white-space: pre-wrap; }
+
+    /* GENERATING OVERLAY */
+    .generating-overlay {
+      position: absolute; inset: 0; z-index: 50;
+      background: rgba(10,10,10,0.92); backdrop-filter: blur(6px);
+      display: none; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+    }
+    .generating-overlay.show { display: flex; }
+
+    .gen-spinner {
+      width: 56px; height: 56px; border-radius: 50%;
+      border: 2px solid rgba(124,58,237,0.2);
+      border-top-color: var(--accent2);
+      animation: rotate 0.8s linear infinite;
+    }
+    @keyframes rotate { to { transform: rotate(360deg); } }
+
+    /* THINKING BRAIN */
+    .thinking-brain {
+      width: 64px; height: 64px;
+      background: rgba(124,58,237,0.1);
+      border: 1px solid rgba(124,58,237,0.4);
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; margin-bottom: 20px;
+      animation: brain-pulse 1.5s ease-in-out infinite;
+      box-shadow: 0 0 25px rgba(124,58,237,0.3);
+    }
+    @keyframes brain-pulse {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.15); opacity: 1; box-shadow: 0 0 45px rgba(124,58,237,0.5); }
+    }
+
+    .gen-label { font-size: 15px; font-weight: 500; color: rgba(255,255,255,0.7); }
+    .gen-sub { font-size: 12px; color: var(--dim); }
+    .gen-route-row { display: flex; gap: 12px; margin-top: 4px; }
+    .gen-chip {
+      padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .chip-g { background: rgba(59,130,246,0.15); color: #60a5fa; }
+    .chip-o { background: rgba(245,158,11,0.15); color: #fbbf24; }
+    .chip-q { background: rgba(34,197,94,0.15); color: #4ade80; }
+    .chip-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+    /* ERROR TOAST */
+    .toast {
+      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+      background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3);
+      color: #fca5a5; padding: 10px 18px; border-radius: 10px; font-size: 13px;
+      z-index: 9998; display: none; animation: toastIn 0.3s ease;
+    }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } }
+    .toast.show { display: block; }
+
+    /* CREDITS HUD */
+    #creditHUD {
+      position: fixed; bottom: 20px; right: 20px;
+      background: rgba(10,10,10,0.92); border: 1px solid var(--border2);
+      border-radius: 12px; padding: 12px 16px; z-index: 9999;
+      backdrop-filter: blur(16px); min-width: 162px;
+    }
+    .hud-h { font-size: 9px; font-weight: 700; letter-spacing: 1.3px; text-transform: uppercase; color: var(--dim); margin-bottom: 8px; }
+    .hud-r { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-size: 12px; }
+    .hud-lbl { color: var(--dim); }
+    .hud-red { color: #f87171; font-weight: 700; }
+    .hud-grn { color: #4ade80; font-weight: 700; }
+    .hud-req { color: #3b82f6; font-weight: 700; }
+    .hud-div { height: 1px; background: var(--border); margin: 7px 0; }
+
+    @media (max-width: 700px) {
+      .main { flex-direction: column; }
+      .left { width: 100%; height: 320px; border-right: none; border-bottom: 1px solid var(--border); }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- TOP NAV -->
+  <div class="top-nav">
+    <a class="nav-logo" href="index.html">⚡ <span>CerebroGate</span></a>
+    <div class="nav-right">
+      <a href="dashboard.html"><button class="nav-btn">Dashboard</button></a>
+      <a href="index.html"><button class="nav-btn nav-btn-home">← Home</button></a>
+    </div>
+  </div>
+
+  <!-- MAIN LAYOUT -->
+  <div class="main">
+
+    <!-- LEFT PANEL -->
+    <div class="left">
+      <div class="left-header">
+        <h2>App Builder</h2>
+        <p>Describe what you want to build</p>
+      </div>
+
+      <div class="history" id="historyList">
+        <!-- History items inserted here -->
+      </div>
+
+      <!-- INPUT -->
+      <div class="input-area">
+        <div class="prompt-box">
+          <textarea id="promptInput" placeholder="e.g. build a calculator with dark theme&#10;build a todo list with local storage&#10;build a weather dashboard UI"></textarea>
+          <div class="prompt-footer">
+            <div class="routing-tags">
+              <div class="rtag"><div class="rdot rdot-g"></div>Gemini</div>
+              <div class="rtag"><div class="rdot rdot-q"></div>Groq</div>
+              <div class="rtag"><div class="rdot rdot-o"></div>OpenRouter</div>
+            </div>
+            <button class="gen-btn" id="generateBtn">
+              <span>⚡</span> Generate
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROGRESS -->
+      <div class="progress-wrap" id="progressWrap" style="display:none;">
+        <div class="progress-steps">
+          <div class="pstep" id="ps1"><div class="pstep-icon">●</div>Architecture → Gemini</div>
+          <div class="pstep" id="ps2"><div class="pstep-icon">●</div>Code → Groq 70B</div>
+          <div class="pstep" id="ps3"><div class="pstep-icon">●</div>Explanation → Groq 8B</div>
+          <div class="pstep" id="ps4"><div class="pstep-icon">●</div>Assembling output</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right" style="position:relative;">
+
+      <!-- Generating overlay -->
+      <div class="generating-overlay" id="overlay">
+        <div class="thinking-brain">🧠</div>
+        <div class="gen-label" id="overlayLabel">Routing your prompt...</div>
+        <div class="gen-sub">This takes 10–30 seconds</div>
+        <div class="gen-route-row">
+          <div class="gen-chip chip-g"><div class="chip-dot" style="background:#3b82f6;border-radius:50%;"></div>Gemini</div>
+          <div class="gen-chip chip-q"><div class="chip-dot" style="background:#22c55e;border-radius:50%;"></div>Groq 70B</div>
+          <div class="gen-chip chip-o"><div class="chip-dot" style="background:#f59e0b;border-radius:50%;"></div>OpenRouter</div>
+        </div>
+      </div>
+
+      <!-- TABS BAR -->
+      <div class="tabs">
+        <button class="tab active" id="tabPreviewBtn" onclick="switchTab('Preview')">Preview</button>
+        <button class="tab" id="tabCodeBtn" onclick="switchTab('Code')">HTML Code</button>
+        <button class="tab" id="tabArchBtn" onclick="switchTab('Arch')">Architecture</button>
+        <button class="tab" id="tabExpBtn" onclick="switchTab('Exp')">Explanation</button>
+        <div class="tabs-right" id="tabsRight" style="display:none;">
+          <span class="provider-badge" id="codeBadge">Groq</span>
+          <button class="copy-btn-sm" onclick="copyCode()">Copy HTML</button>
+        </div>
+      </div>
+
+      <!-- PREVIEW TAB -->
+      <div class="tab-content active" id="tabPreview">
+        <div class="preview-empty" id="previewEmpty">
+          <div class="preview-graphic">⚡</div>
+          <div class="preview-title">Ready to Build</div>
+          <div class="preview-sub">Enter your prompt on the left and click Generate — your app will appear here</div>
+        </div>
+        <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin allow-modals allow-forms"></iframe>
+      </div>
+
+      <!-- CODE TAB -->
+      <div class="tab-content" id="tabCode">
+        <div id="codePanel">
+          <div class="code-inner"><pre id="codeViewer">// No code generated yet</pre></div>
+        </div>
+      </div>
+
+      <!-- ARCH TAB -->
+      <div class="tab-content" id="tabArch">
+        <div class="prose-panel" id="archViewer">Architecture will appear here after generation.</div>
+      </div>
+
+      <!-- EXP TAB -->
+      <div class="tab-content" id="tabExp">
+        <div class="prose-panel" id="expViewer">Explanation will appear here after generation.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ERROR TOAST -->
+<div class="toast" id="errorToast"></div>
+
+<!-- CREDITS HUD -->
+<div id="creditHUD">
+  <div class="hud-h">Credits</div>
+  <div class="hud-r"><span class="hud-lbl">Used</span><span class="hud-red" id="hudUsed">$0.000</span></div>
+  <div class="hud-div"></div>
+  <div class="hud-r"><span class="hud-lbl">Left</span><span class="hud-grn" id="hudLeft">$15.000</span></div>
+  <div class="hud-r"><span class="hud-lbl">Requests</span><span class="hud-req" id="hudReqs">0</span></div>
+  <div class="hud-r"><span class="hud-lbl">Hit Ratio</span><span class="hud-grn" id="hudHit">0%</span></div>
+</div>
+
+<script>
+  let currentCode = '';
+  let buildHistory = [];
+
+  // ─── Tab Switching ─────────────────────────────────────────────────────────
+  function switchTab(name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById('tab' + name + 'Btn').classList.add('active');
+    document.getElementById('tab' + name).classList.add('active');
+  }
+
+  // ─── Step States ───────────────────────────────────────────────────────────
+  function setStep(n, state) {
+    const el = document.getElementById('ps' + n);
+    if (!el) return;
+    el.className = 'pstep ' + state;
+    el.querySelector('.pstep-icon').innerText = state === 'done' ? '✓' : state === 'active' ? '◌' : '●';
+  }
+
+  // ─── Toast ─────────────────────────────────────────────────────────────────
+  function showError(msg) {
+    const t = document.getElementById('errorToast');
+    t.innerText = '❌ ' + msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 5000);
+  }
+
+  // ─── History ───────────────────────────────────────────────────────────────
+  function addHistory(prompt) {
+    const list = document.getElementById('historyList');
+    const item = document.createElement('div');
+    item.className = 'hist-item';
+    item.innerHTML = `<span class="hist-icon">⚡</span><span class="hist-text">${prompt.slice(0, 80)}</span>`;
+    item.onclick = () => {
+      document.getElementById('promptInput').value = prompt;
+    };
+    list.prepend(item);
+  }
+
+  // ─── Copy ──────────────────────────────────────────────────────────────────
+  function copyCode() {
+    navigator.clipboard.writeText(currentCode).then(() => {
+      const btn = document.querySelector('.copy-btn-sm');
+      btn.innerText = '✓ Copied!';
+      setTimeout(() => btn.innerText = 'Copy HTML', 2000);
+    });
+  }
+
+  // ─── Main Generate ─────────────────────────────────────────────────────────
+  document.getElementById('generateBtn').addEventListener('click', generate);
+  document.getElementById('promptInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.ctrlKey) generate();
+  });
+
+  async function generate() {
+    const prompt = document.getElementById('promptInput').value.trim();
+    if (!prompt) { showError('Please enter a prompt first'); return; }
+
+    const btn = document.getElementById('generateBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span>⏳</span> Generating...';
+
+    // Show overlay and progress
+    document.getElementById('overlay').classList.add('show');
+    document.getElementById('progressWrap').style.display = 'block';
+    [1,2,3,4].forEach(i => setStep(i, 'active'));
+
+    const labels = ['Routing to Gemini (Architecture)...', 'Generating code via Groq 70B...', 'Fetching explanation...', 'Assembling output...'];
+    let li = 0;
+    const labelInterval = setInterval(() => {
+      if (li < labels.length) document.getElementById('overlayLabel').innerText = labels[li++];
+    }, 4000);
+
+    try {
+      const res = await fetch('/api/workspace_chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: [{ role: 'user', content: prompt }], currentCodeContext: '', mode: 'build' })
+      });
+
+      clearInterval(labelInterval);
+      document.getElementById('overlay').classList.remove('show');
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Server returned ' + res.status);
+      }
+
+      const data = await res.json();
+      const pipelineData = data.pipelineData || {};
+      const buildData = data.build_data || {};
+      
+      const results = pipelineData.results || [];
+      const archRes = results.find(r => r.type === 'architecture');
+      const codeRes = results.find(r => r.type === 'code');
+      const expRes = results.find(r => r.type === 'explanation');
+
+      currentCode = buildData.frontend_code || (codeRes ? codeRes.content : '');
+
+      [1,2,3,4].forEach(i => setStep(i, 'done'));
+
+      // Provider badge
+      const provName = buildData.code_provider || (codeRes ? codeRes.provider : 'Groq');
+      const p = provName.toLowerCase();
+      const badge = document.getElementById('codeBadge');
+      
+      badge.className = 'provider-badge ' + (
+        p.includes('gemini') ? 'pb-gemini' : 
+        p.includes('openrouter') ? 'pb-openrouter' : 
+        p.includes('anthropic') ? 'pb-anthropic' : 
+        p.includes('openai') ? 'pb-openai' : 'pb-groq'
+      );
+      badge.innerText = provName;
+      document.getElementById('tabsRight').style.display = 'flex';
+
+      // Code viewer
+      document.getElementById('codeViewer').innerText = currentCode || '// No code returned';
+
+      // Architecture & Explanation
+      document.getElementById('archViewer').innerText = buildData.architecture || (archRes ? archRes.content : 'No architecture returned.');
+      document.getElementById('expViewer').innerText = buildData.explanation || (expRes ? expRes.content : 'No explanation returned.');
+
+      // Preview
+      const isHTML = currentCode && (
+        currentCode.trim().toLowerCase().startsWith('<!doctype') ||
+        currentCode.trim().toLowerCase().includes('<html')
+      );
+
+      if (isHTML) {
+        document.getElementById('previewEmpty').style.display = 'none';
+        const frame = document.getElementById('previewFrame');
+        frame.style.display = 'block';
+        frame.srcdoc = currentCode;
+        switchTab('Preview');
+      } else {
+        showError('Application built, but HTML not detected — check the code tab.');
+        switchTab('Code');
+      }
+
+      addHistory(prompt);
+      pollCredits();
+
+    } catch(err) {
+      clearInterval(labelInterval);
+      document.getElementById('overlay').classList.remove('show');
+      showError(err.message);
+      console.error(err);
+      [1,2,3,4].forEach(i => setStep(i, ''));
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<span>⚡</span> Generate';
+  }
+
+  // ─── Credits Poll ──────────────────────────────────────────────────────────
+  async function pollCredits() {
+    try {
+      const r = await fetch('/api/stats');
+      if (!r.ok) return;
+      const d = await r.json();
+      document.getElementById('hudUsed').innerText = '$' + (d.credits_used||0).toFixed(3);
+      document.getElementById('hudLeft').innerText = '$' + (d.credits_left||15).toFixed(3);
+      document.getElementById('hudReqs').innerText = d.total_requests || 0;
+      const rate = d.total_requests > 0 ? Math.round((d.cache_hits/d.total_requests)*100) : 0;
+      document.getElementById('hudHit').innerText = rate + '%';
+    } catch(e) {}
+  }
+  pollCredits();
+  setInterval(pollCredits, 5000);
+</script>
+</body>
+</html>

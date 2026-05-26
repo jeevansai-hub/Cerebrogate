@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CerebroGate - Output</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .output-container {
+      max-width: 1000px;
+      margin: 60px auto;
+      padding: 0 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .section-box {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .code-container {
+      position: relative;
+      background: #111;
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+    }
+
+    .code-container pre {
+      margin: 0;
+      font-family: monospace;
+      font-size: 14px;
+      color: #e5e5e5;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .copy-btn:hover { background: rgba(255,255,255,0.2); }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .stat-card {
+      background: rgba(255,255,255,0.05);
+      padding: 16px;
+      border-radius: 8px;
+    }
+    
+    .stat-value {
+      font-size: 24px;
+      font-weight: 600;
+      margin-top: 8px;
+    }
+    
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="index.html" class="logo">CerebroGate</a>
+    <div class="nav-cta">
+      <button id="downloadZipBtn" class="btn btn-solid">Download as ZIP</button>
+    </div>
+  </nav>
+
+  <main class="output-container animate-fade">
+    
+    <!-- Cost & Routing Summary -->
+    <div class="section-box">
+      <h2 class="section-title">Generation Summary</h2>
+      <div class="summary-grid">
+        <div class="stat-card">
+          <div class="stat-label">Cache Hit</div>
+          <div class="stat-value" id="valCacheHit">-</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Cost Saved</div>
+          <div class="stat-value" id="valCostSaved" style="color: #22c55e;">-</div>
+        </div>
+      </div>
+      
+      <div style="margin-top: 16px;">
+        <div class="stat-label">Routing Map:</div>
+        <ul id="routingMapList" style="margin-top: 8px; font-size: 13px; color: var(--text-secondary); padding-left: 20px; list-style-type: disc;">
+        </ul>
+      </div>
+    </div>
+
+    <!-- Architecture Plan -->
+    <div class="section-box">
+      <h2 class="section-title">Architecture Plan <span id="badgeArch" class="pill-badge" style="font-size: 11px;">Gemini</span></h2>
+      <div id="architectureContent" style="font-size: 15px; line-height: 1.6; color: var(--text-secondary); white-space: pre-wrap;"></div>
+    </div>
+
+    <!-- Frontend Code -->
+    <div class="section-box">
+      <h2 class="section-title">Frontend Code <span id="badgeFront" class="pill-badge" style="font-size: 11px;">OpenRouter</span></h2>
+      <div class="code-container">
+        <button class="copy-btn" onclick="copyCode('frontCode')">Copy</button>
+        <pre><code id="frontCode"></code></pre>
+      </div>
+    </div>
+
+    <!-- Backend Code -->
+    <div class="section-box">
+      <h2 class="section-title">Backend Code <span id="badgeBack" class="pill-badge" style="font-size: 11px;">OpenRouter</span></h2>
+      <div class="code-container">
+        <button class="copy-btn" onclick="copyCode('backCode')">Copy</button>
+        <pre><code id="backCode"></code></pre>
+      </div>
+    </div>
+
+    <!-- Explanation -->
+    <div class="section-box">
+      <h2 class="section-title">Explanation & Context <span id="badgeExp" class="pill-badge" style="font-size: 11px;">Groq</span></h2>
+      <div id="explanationContent" style="font-size: 15px; line-height: 1.6; color: var(--text-secondary); white-space: pre-wrap;"></div>
+    </div>
+
+  </main>
+
+  <script src="js/output.js"></script>
+</body>
+</html>

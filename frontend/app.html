@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CerebroGate - App Builder</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+  <!-- Minimal Nav -->
+  <nav class="navbar">
+    <a href="index.html" class="logo">CerebroGate</a>
+    <ul class="nav-links">
+      <li><a href="dashboard.html">Dashboard</a></li>
+    </ul>
+  </nav>
+
+  <main class="app-container animate-fade">
+    <div>
+      <h1 style="font-size: 32px; font-weight: 500; margin-bottom: 8px;">Build your App</h1>
+      <p style="color: var(--text-secondary); font-size: 15px;">Our routing engine will intelligently forward your request elements for maximum efficiency.</p>
+    </div>
+
+    <!-- Input Area -->
+    <div class="prompt-area">
+      <textarea id="promptInput" placeholder="Describe the application you want to build... (e.g. Build a task manager with a React frontend, Node.js backend. Use SQLite. Explain the architecture briefly.)"></textarea>
+      
+      <!-- Token Legend -->
+      <div class="legend">
+        <div class="legend-item"><div class="legend-color color-blue"></div>Architecture (Gemini)</div>
+        <div class="legend-item"><div class="legend-color color-yellow"></div>Code (OpenRouter)</div>
+        <div class="legend-item"><div class="legend-color color-green"></div>Explanation (Groq)</div>
+      </div>
+
+      <button id="generateBtn" class="btn btn-solid" style="width: fit-content; padding: 14px 32px;">Generate App</button>
+    </div>
+
+    <!-- Token Analysis / Pipeline Diagram -->
+    <div class="pipeline-diagram" id="pipelineDiagram" style="display: none;">
+      <div class="node">
+        <div class="node-box" style="border-color: rgba(255,255,255,0.5)">User Prompt</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="node">
+        <div class="node-box">Token Splitter</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="routing-nodes">
+         <div class="node-box" style="border-left: 3px solid #3b82f6;">Gemini (Heavy)</div>
+         <div class="node-box" style="border-left: 3px solid #eab308;">OpenRouter (Med)</div>
+         <div class="node-box" style="border-left: 3px solid #22c55e;">Groq (Fast)</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="node">
+        <div class="node-box">Assembler</div>
+      </div>
+      <div class="arrow">→</div>
+       <div class="node">
+        <div class="node-box" style="border-color: #ffffff; color: #ffffff;">Final App</div>
+      </div>
+    </div>
+    
+    <div id="statusMessage" style="text-align: center; color: var(--text-secondary); font-size: 14px; margin-top: 10px;"></div>
+
+  </main>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

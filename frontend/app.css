@@ -1,0 +1,120 @@
+/* app.css - specific to the Prompt Builder interface */
+.app-container {
+  max-width: 900px;
+  margin: 100px auto;
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.prompt-area {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+textarea {
+  width: 100%;
+  height: 200px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 24px;
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 16px;
+  resize: vertical;
+  outline: none;
+}
+
+textarea:focus {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.pipeline-diagram {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  padding: 32px;
+  border-radius: 12px;
+  margin-top: 32px;
+}
+
+.node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.node-box {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.arrow {
+  color: var(--glass-border);
+  animation: pulse 1.5s infinite;
+}
+
+.routing-nodes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.route-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.legend-color {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.color-blue { background: #3b82f6; box-shadow: 0 0 10px #3b82f6; }
+.color-yellow { background: #eab308; box-shadow: 0 0 10px #eab308; }
+.color-green { background: #22c55e; box-shadow: 0 0 10px #22c55e; }
+
+@keyframes pulse {
+  0% { opacity: 0.3; }
+  50% { opacity: 1; }
+  100% { opacity: 0.3; }
+}
+
+@media (max-width: 768px) {
+  .pipeline-diagram {
+    flex-direction: column;
+    gap: 20px;
+  }
+  .arrow {
+    transform: rotate(90deg);
+  }
+}
