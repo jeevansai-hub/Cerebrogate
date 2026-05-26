@@ -344,7 +344,6 @@
 
       <!-- Generating overlay -->
       <div class="generating-overlay" id="overlay">
-        <div class="thinking-brain" id="overlayBrain">🧠</div>
         <div class="gen-label" id="overlayLabel">Routing your prompt...</div>
         <div class="gen-sub">This takes 10–30 seconds</div>
         <div class="gen-route-row">
@@ -478,22 +477,20 @@
     [1,2,3,4].forEach(i => setStep(i, 'active'));
 
     const steps = [
-      { emoji: '🔍', text: 'Analyzing application prompt...' },
-      { emoji: '🧠', text: 'Evaluating required features...' },
-      { emoji: '📐', text: 'Defining system architecture...' },
-      { emoji: '🧩', text: 'Generating backend API routers...' },
-      { emoji: '🎨', text: 'Generating responsive UI mockup...' },
-      { emoji: '📝', text: 'Writing code comments...' },
-      { emoji: '⚡', text: 'Assembling full-stack bundle...' },
-      { emoji: '⏳', text: 'Finalizing deployment zip...' }
+      'Analyzing application prompt...',
+      'Evaluating required features...',
+      'Defining system architecture...',
+      'Generating backend API routers...',
+      'Generating responsive UI mockup...',
+      'Writing code comments...',
+      'Assembling full-stack bundle...',
+      'Finalizing deployment zip...'
     ];
     let li = 0;
-    document.getElementById('overlayBrain').innerText = steps[0].emoji;
-    document.getElementById('overlayLabel').innerText = steps[0].text;
+    document.getElementById('overlayLabel').innerText = steps[0];
     const labelInterval = setInterval(() => {
       li = (li + 1) % steps.length;
-      document.getElementById('overlayBrain').innerText = steps[li].emoji;
-      document.getElementById('overlayLabel').innerText = steps[li].text;
+      document.getElementById('overlayLabel').innerText = steps[li];
     }, 2000);
 
     try {

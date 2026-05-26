@@ -86,8 +86,8 @@ async function callGroq(prompt, model = 'llama-3.1-8b-instant') {
 
 async function callOpenAI(prompt, model = 'gpt-4o-mini') {
   if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-or-v1-')) {
-    // OpenAI mapping when using OpenRouter key: route to meta-llama/llama-3-8b-instruct:free
-    return callOpenRouterWithKey(prompt, 'meta-llama/llama-3-8b-instruct:free', process.env.OPENAI_API_KEY, 'OpenAI');
+    // OpenAI mapping when using OpenRouter key: route to openrouter/free
+    return callOpenRouterWithKey(prompt, 'openrouter/free', process.env.OPENAI_API_KEY, 'OpenAI');
   }
   try {
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -107,8 +107,8 @@ async function callOpenAI(prompt, model = 'gpt-4o-mini') {
 
 async function callAnthropic(prompt, model = 'claude-3-5-sonnet-20240620') {
   if (process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY.startsWith('sk-or-v1-')) {
-    // Anthropic mapping when using OpenRouter key: route to meta-llama/llama-3.1-8b-instruct:free
-    return callOpenRouterWithKey(prompt, 'meta-llama/llama-3.1-8b-instruct:free', process.env.ANTHROPIC_API_KEY, 'Anthropic');
+    // Anthropic mapping when using OpenRouter key: route to openrouter/free
+    return callOpenRouterWithKey(prompt, 'openrouter/free', process.env.ANTHROPIC_API_KEY, 'Anthropic');
   }
   try {
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -230,10 +230,37 @@ async function handleBuildRequest(prompt) {
 }
 
 async function handleChat(messages, context = '') {
+  const userMessages = messages.filter(m => m.role === 'user');
+  
+  if (userMessages.length === 1) {
+    // First message: Strictly ask for clarification on domain, expectations, format, and context
+    return {
+      type: 'chat',
+      content: `To help me route and answer your request with the highest possible accuracy, please specify a few details first:
+
+1. **Domain/Context:** What specific domain or industry does your question belong to (e.g. web development, finance, medicine, academic writing)?
+2. **Expectations:** What exactly do you expect from my explanation or solution?
+3. **Format:** What format do you prefer (e.g. step-by-step guide, code examples, bullet points, comparative table)?
+4. **Additional Context:** Any specific frameworks, constraints, or target audience details?
+
+Once you provide these details, I will instantly generate a highly customized answer for you based on this feedback.`,
+      provider: 'System Router',
+      model: 'Context Evaluator',
+      complexity: 'easy',
+      duration: 0,
+      tokens: 0
+    };
+  }
+
+  // For subsequent messages, combine the user's feedback with the original query to generate the final response
   const lastMsg = messages[messages.length - 1].content;
   const complexity = scoreComplexity(lastMsg);
-  const prompt = context ? `Context: ${context}\nUser: ${lastMsg}` : lastMsg;
-  console.log(`\n🧠 Routing ${complexity.toUpperCase()}: "${lastMsg.slice(0, 40)}..."`);
+  
+  // Format history as: "User: [prompt]\nAssistant: [clarifying questions]\nUser: [clarified answers]"
+  let promptText = messages.map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n');
+  const prompt = context ? `Context of codebase:\n${context}\n\nChat History:\n${promptText}` : promptText;
+
+  console.log(`\n🧠 Routing ${complexity.toUpperCase()} (Clarified): "${lastMsg.slice(0, 40)}..."`);
 
   let res;
   if (complexity === 'easy') {

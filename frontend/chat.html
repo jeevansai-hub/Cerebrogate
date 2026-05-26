@@ -268,7 +268,6 @@
   <div class="content-layer">
     <!-- ALLY BADGE -->
     <div class="ally-badge">
-      <svg class="sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.45 4.5h4.55l-3.7 2.7 1.45 4.5-3.75-2.8-3.75 2.8 1.45-4.5-3.7-2.7h4.55z"/></svg>
       <span>New AI Automation Ally</span>
     </div>
 
@@ -284,7 +283,6 @@
     </div>
     
     <div id="thinkingBox" style="display:none; align-items:center; flex-direction:column; margin-bottom:20px; animation: blurIn 0.4s ease-out both;">
-      <div class="thinking-brain" id="thinkingBrain">🧠</div>
       <div id="thinkingLabel" style="font-size:12px; color:var(--openai-color); font-weight:600; letter-spacing:1px; text-transform:uppercase;">Thinking...</div>
     </div>
 
@@ -359,26 +357,23 @@
   let thinkingInterval;
   function startThinkingAnimation() {
     const steps = [
-      { emoji: '🔍', text: 'Analyzing user query...' },
-      { emoji: '🧠', text: 'Evaluating context...' },
-      { emoji: '📝', text: 'Summarizing history...' },
-      { emoji: '🎯', text: 'Defining scope...' },
-      { emoji: '🚦', text: 'Scoring complexity...' },
-      { emoji: '📡', text: 'Selecting optimal model...' },
-      { emoji: '⚡', text: 'Routing request...' },
-      { emoji: '⏳', text: 'Awaiting model response...' }
+      'Analyzing user query...',
+      'Evaluating context...',
+      'Summarizing history...',
+      'Defining scope...',
+      'Scoring complexity...',
+      'Selecting optimal model...',
+      'Routing request...',
+      'Awaiting model response...'
     ];
     let stepIndex = 0;
-    const brainEl = document.getElementById('thinkingBrain');
     const labelEl = document.getElementById('thinkingLabel');
     
-    brainEl.innerText = steps[0].emoji;
-    labelEl.innerText = steps[0].text;
+    labelEl.innerText = steps[0];
     
     thinkingInterval = setInterval(() => {
       stepIndex = (stepIndex + 1) % steps.length;
-      brainEl.innerText = steps[stepIndex].emoji;
-      labelEl.innerText = steps[stepIndex].text;
+      labelEl.innerText = steps[stepIndex];
     }, 1200);
   }
 
