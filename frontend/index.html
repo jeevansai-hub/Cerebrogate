@@ -213,41 +213,7 @@
       color: var(--text-dim);
     }
 
-    /* FLOATING CREDITS BOX */
-    #creditHUD {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: rgba(10,10,10,0.85);
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 14px;
-      padding: 14px 18px;
-      z-index: 9999;
-      backdrop-filter: blur(12px);
-      min-width: 180px;
-      font-size: 12px;
-    }
 
-    .hud-title {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.4);
-      margin-bottom: 10px;
-    }
-
-    .hud-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 6px;
-    }
-
-    .hud-label { color: rgba(255,255,255,0.55); }
-    .hud-val-red { color: #f87171; font-weight: 600; }
-    .hud-val-green { color: #4ade80; font-weight: 600; }
-    .hud-divider { height: 1px; background: rgba(255,255,255,0.08); margin: 8px 0; }
 
     @media (max-width: 768px) {
       nav { padding: 20px 24px; }
@@ -309,43 +275,6 @@
     </div>
   </div>
 
-  <!-- GLOBAL FLOATING CREDITS HUD -->
-  <div id="creditHUD">
-    <div class="hud-title">Credits</div>
-    <div class="hud-row">
-      <span class="hud-label">Used</span>
-      <span class="hud-val-red" id="hudUsed">$0.000</span>
-    </div>
-    <div class="hud-divider"></div>
-    <div class="hud-row">
-      <span class="hud-label">Left</span>
-      <span class="hud-val-green" id="hudLeft">$15.00</span>
-    </div>
-    <div class="hud-row">
-      <span class="hud-label">Requests</span>
-      <span class="hud-val-green" id="hudReqs">0</span>
-    </div>
-    <div class="hud-row">
-      <span class="hud-label">Hit Ratio</span>
-      <span class="hud-val-green" id="hudHitRatio">0%</span>
-    </div>
-  </div>
 
-  <script>
-    async function pollCredits() {
-      try {
-        const res = await fetch('/api/stats');
-        if (!res.ok) return;
-        const d = await res.json();
-        document.getElementById('hudUsed').innerText = '$' + (d.credits_used || 0).toFixed(3);
-        document.getElementById('hudLeft').innerText = '$' + (d.credits_left || 15).toFixed(3);
-        document.getElementById('hudReqs').innerText = d.total_requests || 0;
-        const rate = d.total_requests > 0 ? ((d.cache_hits / d.total_requests) * 100).toFixed(0) : 0;
-        document.getElementById('hudHitRatio').innerText = rate + '%';
-      } catch(e) {}
-    }
-    pollCredits();
-    setInterval(pollCredits, 5000);
-  </script>
 </body>
 </html>
