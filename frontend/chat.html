@@ -374,11 +374,30 @@
         body:JSON.stringify({ messages:history, currentCodeContext:'' })
       });
       document.getElementById('thinkingBox').style.display = 'none';
+      ['groq','openai','gemini','openrouter'].forEach(id => document.getElementById('rp-'+id).classList.remove('routing-pulse'));
+      
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        const errMsg = errData.error || `Server error: ${res.status}`;
+        addMsg(`⚠️ Error: ${errMsg}`, 'ai');
+        return;
+      }
+      
       const data = await res.json();
+      if (data.error) {
+        addMsg(`⚠️ Error: ${data.error}`, 'ai');
+        return;
+      }
+      
       activateProvider(data.provider, data.complexity, data.model);
       addMsg(data.message, 'ai', data.provider, data.model, data.complexity);
       history.push({ role:'assistant', content:data.message });
-    } catch(e) { console.error(e); }
+    } catch(e) { 
+      console.error(e);
+      document.getElementById('thinkingBox').style.display = 'none';
+      ['groq','openai','gemini','openrouter'].forEach(id => document.getElementById('rp-'+id).classList.remove('routing-pulse'));
+      addMsg(`⚠️ Connection Error: Failed to communicate with CerebroGate server.`, 'ai');
+    }
     pollCredits();
   }
 

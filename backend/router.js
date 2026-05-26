@@ -86,8 +86,8 @@ async function callGroq(prompt, model = 'llama-3.1-8b-instant') {
 
 async function callOpenAI(prompt, model = 'gpt-4o-mini') {
   if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-or-v1-')) {
-    // 2 AN ONE IS MiniMax: MiniMax M2.5 (free) -> map to minimax/minimax-m2.5:free
-    return callOpenRouterWithKey(prompt, 'minimax/minimax-m2.5:free', process.env.OPENAI_API_KEY, 'OpenAI');
+    // OpenAI mapping when using OpenRouter key: route to meta-llama/llama-3-8b-instruct:free
+    return callOpenRouterWithKey(prompt, 'meta-llama/llama-3-8b-instruct:free', process.env.OPENAI_API_KEY, 'OpenAI');
   }
   try {
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -107,8 +107,8 @@ async function callOpenAI(prompt, model = 'gpt-4o-mini') {
 
 async function callAnthropic(prompt, model = 'claude-3-5-sonnet-20240620') {
   if (process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY.startsWith('sk-or-v1-')) {
-    // 3RD ONE OpenAI: gpt-oss-120b (free) -> map to openai/gpt-oss-120b:free
-    return callOpenRouterWithKey(prompt, 'openai/gpt-oss-120b:free', process.env.ANTHROPIC_API_KEY, 'Anthropic');
+    // Anthropic mapping when using OpenRouter key: route to meta-llama/llama-3.1-8b-instruct:free
+    return callOpenRouterWithKey(prompt, 'meta-llama/llama-3.1-8b-instruct:free', process.env.ANTHROPIC_API_KEY, 'Anthropic');
   }
   try {
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -128,8 +128,8 @@ async function callAnthropic(prompt, model = 'claude-3-5-sonnet-20240620') {
 
 async function callGemini(prompt, retries = 2) {
   if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.startsWith('sk-or-v1-')) {
-    // 1 ST ONE IS Google: Gemma 4 26B A4B (free) -> map to google/gemma-4-26b-a4b-it:free
-    return callOpenRouterWithKey(prompt, 'google/gemma-4-26b-a4b-it:free', process.env.GEMINI_API_KEY, 'Gemini');
+    // Gemini mapping when using OpenRouter key: route to google/gemma-2-9b-it:free
+    return callOpenRouterWithKey(prompt, 'google/gemma-2-9b-it:free', process.env.GEMINI_API_KEY, 'Gemini');
   }
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
   const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
@@ -153,7 +153,7 @@ async function callGemini(prompt, retries = 2) {
   }
 }
 
-async function callOpenRouter(prompt, model = 'google/gemma-4-26b-a4b-it:free') {
+async function callOpenRouter(prompt, model = 'openrouter/free') {
   try {
     const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
       model,

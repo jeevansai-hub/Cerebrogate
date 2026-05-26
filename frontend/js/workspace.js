@@ -48,7 +48,23 @@ document.getElementById('sendBtn').addEventListener('click', async () => {
        })
      });
 
+     if (!response.ok) {
+       const errData = await response.json().catch(() => ({}));
+       const errMsg = errData.error || `Server error: ${response.status}`;
+       addChatBubble(`⚠️ Error: ${errMsg}`, 'ai');
+       sendBtn.disabled = false;
+       sendBtn.innerText = 'Send';
+       return;
+     }
+
      const data = await response.json();
+
+     if (data.error) {
+       addChatBubble(`⚠️ Error: ${data.error}`, 'ai');
+       sendBtn.disabled = false;
+       sendBtn.innerText = 'Send';
+       return;
+     }
 
      if(data.mode === 'chat') {
         // Pure conversation
